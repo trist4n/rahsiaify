@@ -184,11 +184,14 @@ second_tracks = get_playlist_tracks(atoken, playlists[second]["owner"]["id"], pl
 uris = []
 for i in range(0,12):
     ftrack = random.choice(first_tracks["items"])
-    uris.append(ftrack["track"]["id"])
-    print "adding %s" % (ftrack["track"]["name"])
-
     strack = random.choice(second_tracks["items"])
-    uris.append(strack["track"]["id"])
-    print "adding %s" % (strack["track"]["name"])
+
+    ## get some weird Nones here, reroll
+    if ftrack["track"]["id"] and strack["track"]["id"]:
+        uris.append(ftrack["track"]["id"])
+        print "adding %s" % (ftrack["track"]["name"])
+
+        uris.append(strack["track"]["id"])
+        print "adding %s" % (strack["track"]["name"])
 
 print new_playlist(atoken, self["id"], uris)
