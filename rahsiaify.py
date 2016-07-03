@@ -11,6 +11,7 @@ import base64
 import fileinput
 import random
 import json
+from time import gmtime, strftime
 
 if "DEBUG" in os.environ:
     import httplib as http_client
@@ -111,7 +112,7 @@ def get_playlist_tracks(atoken, userid, playlistid):
 
 
 def new_playlist(atoken, userid, songlist):
-    id = uuid.uuid4()
+    id = "mixup: %s" % (strftime("%Y-%m-%d %H:%M:%S", gmtime()))
     payload = {
         "name": str(id),
         "public": False,
@@ -125,18 +126,17 @@ def new_playlist(atoken, userid, songlist):
         data = json.dumps(payload),
         headers = headers,
     )
-    if r.status_code != 200:
-        logging.fatal(r.text)
 
-    print r.text
     data = r.json()
-    print "adding tracks to %s" % (data["id"])
+    print "adding tracks to %s (%s)" % (id, data["id"])
 
+    songs = ["spotify:track:%s" % (s) for s in songlist]
+    print songs
     r = requests.post('https://api.spotify.com/v1/users/%s/playlists/%s/tracks' % (userid,data["id"]),
-        data = {
-            "uris": ["spotify:track:%s" % (s) for s in songlist],
-        },
-        headers = get_auth_header(atoken),
+        data = json.dumps({
+            "uris": songs
+        }),
+        headers = headers,
     )
     return r.json()
 
@@ -181,4 +181,4 @@ for i in range(0,12):
     uris.append(strack["track"]["id"])
     print "adding %s" % (strack["track"]["name"])
 
-new_playlist(atoken, self["id"], uris)
+print new_playlist(atoken, self["id"], uris)
