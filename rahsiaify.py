@@ -41,8 +41,6 @@ def connect_db():
     rv.row_factory = sqlite3.Row
     return rv
 
-
-
 db = connect_db()
 db.execute("create table if not exists tokens (id string primary key, access_code string, access_token string, refresh_token string, expires_in int)")
 
@@ -104,10 +102,16 @@ def get_self(atoken):
 
 def get_user_playlists(atoken, userid):
     r = requests.get("https://api.spotify.com/v1/users/%s/playlists" % (userid), headers=get_auth_header(atoken))
+    if r.status_code != 200:
+        logging.fatal(r.text)
+
     return r.json()
 
 def get_playlist_tracks(atoken, userid, playlistid):
     r = requests.get("https://api.spotify.com/v1/users/%s/playlists/%s/tracks" % (userid,playlistid), headers=get_auth_header(atoken))
+    if r.status_code != 200:
+        logging.fatal(r.text)
+
     return r.json()
 
 
@@ -157,18 +161,24 @@ if not row:
 print "id=%s, atoken=%s, rtoken=%s" % (id,atoken,rtoken)
 self =  get_self(atoken)
 
-playlists =  get_user_playlists(atoken, self["id"])
-for i in range(0,len(playlists["items"])):
-    print "[%d] %s" % (i,playlists["items"][i]["name"])
+pl =  get_user_playlists(atoken, self["id"])
+playlists = pl["items"]
+
+if "RAHSIA_EXTRA_USERNAME" in os.environ:
+    extra_pl = get_user_playlists(atoken, os.environ["RAHSIA_EXTRA_USERNAME"])
+    playlists.extend(extra_pl["items"])
+
+for i in range(0,len(playlists)):
+    print "[%d] %s" % (i,playlists[i]["name"])
 
 print "first playlist choice: ",
 first = int(raw_input())
 print "second playlist choice: ",
 second = int(raw_input())
 
-print "shuffling between %s and %s" % (playlists["items"][first]["name"], playlists["items"][second]["name"])
-first_tracks = get_playlist_tracks(atoken, self["id"], playlists["items"][first]["id"])
-second_tracks = get_playlist_tracks(atoken, self["id"], playlists["items"][second]["id"])
+print "shuffling between %s and %s" % (playlists[first]["name"], playlists[second]["name"])
+first_tracks = get_playlist_tracks(atoken, playlists[first]["owner"]["id"], playlists[first]["id"])
+second_tracks = get_playlist_tracks(atoken, playlists[second]["owner"]["id"], playlists[second]["id"])
 
 ## build a list of 24 random songs from both
 uris = []
