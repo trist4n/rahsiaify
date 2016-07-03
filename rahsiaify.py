@@ -164,8 +164,8 @@ self =  get_self(atoken)
 pl =  get_user_playlists(atoken, self["id"])
 playlists = pl["items"]
 
-if "RAHSIA_EXTRA_USERNAME" in os.environ:
-    extra_pl = get_user_playlists(atoken, os.environ["RAHSIA_EXTRA_USERNAME"])
+if "RAHSIAIFY_EXTRA_USERNAME" in os.environ:
+    extra_pl = get_user_playlists(atoken, os.environ["RAHSIAIFY_EXTRA_USERNAME"])
     playlists.extend(extra_pl["items"])
 
 for i in range(0,len(playlists)):
